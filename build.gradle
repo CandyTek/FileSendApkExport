@@ -1,0 +1,99 @@
+buildscript {
+	repositories {
+		maven { url 'https://maven.aliyun.com/repository/central' }
+		maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
+		maven { url 'https://maven.aliyun.com/repository/google' }
+		maven { url = uri("https://maven.aliyun.com/repository/public") }
+		//google()
+		//gradlePluginPortal()
+	}
+	dependencies {
+		classpath 'org.javamodularity:moduleplugin:1.8.12'
+		classpath 'org.openjfx:javafx-plugin:0.0.13'
+		classpath 'org.beryx:badass-jlink-plugin:2.25.0'
+		classpath("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:8.3.0")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'org.javamodularity.moduleplugin'
+apply plugin: 'org.openjfx.javafxplugin'
+apply plugin: 'org.beryx.jlink'
+
+group 'com.xiaoming.desktop.filereceiver'
+version '1.0'
+
+repositories {
+	maven { url 'https://maven.aliyun.com/repository/central' }
+	maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
+}
+
+ext {
+	junitVersion = '5.9.2'
+}
+
+sourceCompatibility = '9'
+targetCompatibility = '9'
+//sourceCompatibility = '17'
+//targetCompatibility = '17'
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+application {
+	mainModule = 'com.xiaoming.desktop.filereceiver.file_receiver'
+	mainClass = 'com.xiaoming.desktop.filereceiver.file_receiver.HelloApplication'
+}
+
+javafx {
+	version = '17.0.14'
+	modules = ['javafx.controls', 'javafx.fxml']
+}
+
+dependencies {
+	implementation "org.jetbrains:annotations:+"
+	testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+test {
+	useJUnitPlatform()
+}
+
+jlink {
+	options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+	imageName = 'FileReceiverApp'
+
+	launcher {
+		name = 'FileReceiver'
+	}
+	// 只生成可运行应用
+	jpackage {
+		skipInstaller = true
+		imageName = 'FileReceiverApp'
+	}
+}
+
+jlink {
+	imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
+	//imageZip = project.file("${buildDir}/release/app-${javafx.platform.classifier}.zip")
+	options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+	launcher {
+		name = 'app'
+	}
+}
+
+jlinkZip {
+	group = 'distribution'
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+task testJar2(type: ShadowJar) {
+	archiveBaseName.set('file-receiver-fat') // 自定义 jar 名字
+	archiveVersion.set('1.0') // 自定义版本
+	destinationDirectory.set(file("$buildDir/custom-jars")) // 自定义输出目录
+	archiveClassifier.set('')
+}

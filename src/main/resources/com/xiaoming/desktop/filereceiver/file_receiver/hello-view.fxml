@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.VBox?>
+<VBox spacing="20.0" xmlns:fx="http://javafx.com/fxml"
+		fx:controller="com.xiaoming.desktop.filereceiver.file_receiver.HelloController">
+	<VBox spacing="20.0" xmlns:fx="http://javafx.com/fxml">
+		<Button text="帮助" onAction="#onHelpButtonClick"/>
+		<padding>
+			<Insets bottom="8" left="8" right="8" top="8"/>
+		</padding>
+	</VBox>
+	<padding>
+		<Insets left="8" right="8" bottom="8"/>
+	</padding>
+
+	<!-- Label 控件 -->
+	<!-- 	<Label fx:id="welcomeText"/> -->
+
+	<!-- ListView 控件 -->
+	<ListView fx:id="listView" prefHeight="-1" prefWidth="-1" VBox.vgrow="ALWAYS">
+		<!-- ListView 可以包含预定义的元素 -->
+	</ListView>
+
+	<!-- Button 控件 -->
+	<!-- 	<Button text="Hello!" onAction="#onHelloButtonClick"/> -->
+</VBox>
