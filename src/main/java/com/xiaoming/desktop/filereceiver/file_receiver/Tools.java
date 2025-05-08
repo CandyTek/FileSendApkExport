@@ -2,7 +2,6 @@ package com.xiaoming.desktop.filereceiver.file_receiver;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
@@ -10,11 +9,14 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.InputStreamReader;
+import java.net.*;
 import java.text.DecimalFormat;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Tools {
@@ -44,7 +46,7 @@ public class Tools {
 		tooltip.setAutoHide(true);
 		tooltip.setOpacity(0.9);
 		tooltip.setStyle("-fx-background-color: black; -fx-text-fill: white; -fx-padding: 10px; -fx-font-size: 14px;");
-		
+
 		tooltip.show(window);
 
 		// 倒计时自动关闭
@@ -73,7 +75,13 @@ public class Tools {
 		return 6565;
 	}
 	public static File getInternalSavePath() {
-		return new File("C:\\receive");
+		if (isWindows()) {
+			return new File("C:\\receive");
+		} else {
+			// 获取用户的 home 目录
+			String home = System.getProperty("user.home");
+			return new File(home,"receive");
+		}
 	}
 	@NotNull
 	public static String getFileMainName(@NotNull String fileName) {
@@ -221,4 +229,74 @@ public class Tools {
 		}
 		return stringBuilder.toString();
 	}
+
+	public static boolean isWindows() {
+		return getOSName().startsWith("Windows");
+	}
+
+	public static boolean isLinux() {
+		return getOSName().startsWith("Linux");
+	}
+
+	public static boolean isMac() {
+		return getOSName().startsWith("Mac");
+	}
+
+	private static String getOSName() {
+		return System.getProperty("os.name");
+	}
+
+	public static String getPreferredAddress() {
+		try {
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+			while (interfaces.hasMoreElements()) {
+				NetworkInterface iface = interfaces.nextElement();
+				// 跳过虚拟网卡和不启用的接口
+				if (iface.isLoopback() || !iface.isUp() || iface.isVirtual()) {
+					continue;
+				}
+
+				Enumeration<InetAddress> addresses = iface.getInetAddresses();
+				while (addresses.hasMoreElements()) {
+					InetAddress addr = addresses.nextElement();
+					// 过滤掉 loopback 和 IPv6 地址（如不需要 IPv6 可跳过）
+					if (!addr.isLoopbackAddress() && addr instanceof Inet4Address) {
+						return addr.getHostAddress();
+					}
+				}
+			}
+		}
+		catch (SocketException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static String getNetworkGateway() {
+		StringBuilder output = new StringBuilder();
+		try {
+			Process process = Runtime.getRuntime().exec("tracert -h 1 -d 8.8.8.8");
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+			String line;
+			int lineCount = 0;
+			Pattern ipPattern = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}");
+
+			while ((line = reader.readLine()) != null) {
+				lineCount++;
+				if (lineCount == 4) { // 通常第4行是第一跳
+					Matcher matcher = ipPattern.matcher(line);
+					if (matcher.find()) {
+						return matcher.group();
+					}
+					break;
+				}
+			}
+		}
+		catch (Exception e) {
+			output.append("错误: ").append(e.getMessage());
+		}
+		return output.toString().isEmpty() ? "未能识别默认网关" : output.toString();
+	}
+
 }

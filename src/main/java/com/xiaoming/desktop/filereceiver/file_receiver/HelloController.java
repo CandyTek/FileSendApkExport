@@ -4,30 +4,33 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.stage.Window;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class HelloController implements NetReceiveTask.NetReceiveTaskCallback {
 
-	// 引用 FXML 中的 ListView
+	/**
+	 * 引用 FXML 中的 ListView，用于更改 ListView 样式
+	 */
 	@FXML
 	private ListView<String> listView;
 
-	// 用于管理 ListView 的数据
+	/**
+	 * ListView 的数据
+	 */
 	private ObservableList<String> items;
 
 	private Window getWindow() {
 		return listView.getScene().getWindow();
 	}
-	
+
 	@FXML
 	private void initialize() {
 		// 当用户选择某个项时，显示提示框
@@ -42,12 +45,13 @@ public class HelloController implements NetReceiveTask.NetReceiveTaskCallback {
 
 		// 绑定到 ListView
 		listView.setItems(items);
-		
+
 		// 设置自定义 CellFactory
 		listView.setCellFactory(lv -> new ListCell<String>() {
 			{
 				setPrefWidth(0);
 			}
+
 			@Override
 			protected void updateItem(String item,boolean empty) {
 				super.updateItem(item,empty);
@@ -86,44 +90,25 @@ public class HelloController implements NetReceiveTask.NetReceiveTaskCallback {
 			}
 		});
 		Tools.getInternalSavePath().mkdirs();
-		String gateway = Tools.convertToBroadcastIP(getNetworkGateway());
+		// String gateway = Tools.convertToBroadcastIP(getNetworkGateway());
+		String gateway;
+		if (Tools.isWindows()) {
+			gateway = Tools.convertToBroadcastIP(Tools.getNetworkGateway());
+		} else {
+			gateway = Tools.convertToBroadcastIP(Tools.getPreferredAddress());
+		}
 		items.add("10 \t广播地址: " + gateway);
 		if (gateway != null) {
 			Constants.BROADCAST_ADDRESS = gateway;
 		} else {
 			System.exit(0);
 		}
-		onCreate();
+		initNetReceive();
 	}
 
-	private String getNetworkGateway() {
-		StringBuilder output = new StringBuilder();
-		try {
-			Process process = Runtime.getRuntime().exec("tracert -h 1 -d 8.8.8.8");
-			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-			String line;
-			int lineCount = 0;
-			Pattern ipPattern = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}");
-
-			while ((line = reader.readLine()) != null) {
-				lineCount++;
-				if (lineCount == 4) { // 通常第4行是第一跳
-					Matcher matcher = ipPattern.matcher(line);
-					if (matcher.find()) {
-						return matcher.group();
-					}
-					break;
-				}
-			}
-		}
-		catch (Exception e) {
-			output.append("错误: ").append(e.getMessage());
-		}
-		return output.toString().isEmpty() ? "未能识别默认网关" : output.toString();
-	}
-
-	// 显示项被选择后的弹出框
+	/**
+	 * 显示项被选择后的弹出框
+	 */
 	private void showItemSelectedAlert(String item) {
 		Alert alert = new Alert(Alert.AlertType.INFORMATION);
 		alert.setTitle("选择的项");
@@ -137,15 +122,16 @@ public class HelloController implements NetReceiveTask.NetReceiveTaskCallback {
 		alert.setTitle("帮助"); // 相当于 setTitle
 		alert.setHeaderText(null);
 
-		alert.setContentText("一款文件传输工具，目前软件仅与 Android 手机上的 APK kit、APK 导出工具搭配使用，用于接收软件发来的文件。\n\n请对方安装好（APK kit、APK导出工具）软件，并和当前设备处于同一个局域网(相同WiFi 或 开启热点让对方连接)，发送端选择需分享的应用后点击“直接发送”，再选择本设备即可。\n" +
-				"\n" +
-				"如果本设备连接的是发送端的热点，可尝试勾选“热点模式”。\n" +
-				"\n" +
-				"如果发送端未检测到本设备，试试“重新广播”按钮，若处于同一个Wifi请检查路由是否有“AP隔离”。\n" +
-				"\n" +
-				"文件将保存至“导出路径”，重复名称文件将自动重命名保存。\n" +
-				"\n" +
-				"传输速度存在木桶效应：网络带宽(100Mbps/1000Mbps, 2.4GHz/5GHz…)、储存读写速度(UFS/EMMC…)、CPU处理速度、设备心情…");
+		alert.setContentText(
+				"一款文件传输工具，目前软件仅与 Android 手机上的 APK kit、APK 导出工具搭配使用，用于接收软件发来的文件。\n\n请对方安装好（APK kit、APK导出工具）软件，并和当前设备处于同一个局域网(相同WiFi 或 开启热点让对方连接)，发送端选择需分享的应用后点击“直接发送”，再选择本设备即可。\n" +
+						"\n" +
+						"如果本设备连接的是发送端的热点，可尝试勾选“热点模式”。\n" +
+						"\n" +
+						"如果发送端未检测到本设备，试试“重新广播”按钮，若处于同一个Wifi请检查路由是否有“AP隔离”。\n" +
+						"\n" +
+						"文件将保存至“导出路径”，重复名称文件将自动重命名保存。\n" +
+						"\n" +
+						"传输速度存在木桶效应：网络带宽(100Mbps/1000Mbps, 2.4GHz/5GHz…)、储存读写速度(UFS/EMMC…)、CPU处理速度、设备心情…");
 		// ButtonType confirmButton = new ButtonType("确定");
 		ButtonType shareButton = new ButtonType("前往本软件下载地址");
 
@@ -197,11 +183,8 @@ public class HelloController implements NetReceiveTask.NetReceiveTaskCallback {
 	// 	private final ArrayList<MessageBean> logMessages = new ArrayList<>();
 	private Timer timer;
 	private TimerTask tTask = null;
-	//	
-	//
-	//	
-	// 	@Override
-	protected void onCreate() {
+
+	protected void initNetReceive() {
 		// 绑定端口失败
 		// 	new Thread(() -> {
 		try {
@@ -354,5 +337,5 @@ public class HelloController implements NetReceiveTask.NetReceiveTaskCallback {
 	// 	//██ 收到发送方信息：发送异常 ██
 	@Override
 	public void onFileReceivedError() {}
-	
+
 }
