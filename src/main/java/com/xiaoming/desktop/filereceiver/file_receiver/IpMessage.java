@@ -103,9 +103,9 @@ public class IpMessage {
 				ipMsg_fileInfo.append(Tools.fileInfoSplit());
 				ipMsg_fileInfo.append(fileItem.length());
 				ipMsg_addtional.append(ipMsg_fileInfo.toString());
-                if (i < sendFiles.size() - 1) {
-                    ipMsg_addtional.append(":");
-                }
+				if (i < sendFiles.size() - 1) {
+					ipMsg_addtional.append(":");
+				}
 			}
 
 			IpMessage ipMessage = new IpMessage();

@@ -36,7 +36,7 @@ public class HelloApplication extends Application {
 	private void initView() {
 
 	}
-	
+
 	public static void main(String[] args) {
 
 		launch();

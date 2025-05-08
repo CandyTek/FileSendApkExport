@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 
 public class UdpThread extends Thread {
@@ -74,9 +73,9 @@ public class UdpThread extends Thread {
 	}
 
 	private static void openUdpSocket(int portNumber) throws Exception {
-        if (datagramSocket != null) {
-            datagramSocket.close();
-        }
+		if (datagramSocket != null) {
+			datagramSocket.close();
+		}
 		datagramSocket = new DatagramSocket(portNumber);
 		// datagramSocket.setSoTimeout(0);
 		// datagramSocket.setSoTimeout(1000);
@@ -84,9 +83,9 @@ public class UdpThread extends Thread {
 	}
 
 	public static void closeUdpSocket() {
-        if (datagramSocket != null) {
-            datagramSocket.close();
-        }
+		if (datagramSocket != null) {
+			datagramSocket.close();
+		}
 		datagramSocket = null;
 	}
 
